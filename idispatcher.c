@@ -33,6 +33,12 @@ struct Node *head_ref3 = NULL;
 struct Node *head_ref4 = NULL;
 struct Node *head_ref5 = NULL;
 
+int cmpFunc(const void *a, const void * b) {
+    struct Node * const *nA = a;
+    struct Node * const *nB = b;
+    return( (*nA)->process_id - (*nB)->process_id);
+}
+
 
 void printStatus(STATUS status) {
     switch(status) {
@@ -211,21 +217,6 @@ struct Node popQueue(struct Queue *queue) {
     return node;
 }
 
-// void printQueue(struct Queue *queue) {
-//     if(queue->nodeArray == NULL || isEmpty(queue)) {
-//         return;
-//     }
-//     printf("*******PRINTING THE CURRENT READY QUEUE*******\n");
-//     for(int i = 0;i<queue->size;i++) {
-//         printf("node id -> %d\n", queue->nodeArray[i].process_id);
-//         printf("node Running Time -> %d\n", queue->nodeArray[i].runningTime);
-//         printf("node Ready Time -> %d\n", queue->nodeArray[i].readyTime);
-//         printf("node Block Time -> %d\n", queue->nodeArray[i].blockTime);
-//         printStatus(queue->nodeArray[i].status);
-//     }
-//     printf("**********************************************\n");
-// }
-
 void clearQueue(struct Queue *queue) {
     if(queue == NULL || isEmpty(queue)) {
         return;
@@ -253,7 +244,8 @@ int main() {
 
     struct Queue *q = createQueue(10000);
 
-    struct Node output[5];
+    struct Node **output = (struct Node **)calloc(1, sizeof(struct Node *));
+    int outIndex = 0;
     //struct Node no_node = createNode(0);
 
     struct Node no_node = createNode(0);
@@ -300,7 +292,7 @@ int main() {
                     no_node.referencePointRunning = timeStamp;
 
 
-                    
+
                     n.status = RUNNING;  
                     n.referencePointRunning = timeStamp;
                 } else {
@@ -403,7 +395,6 @@ int main() {
                 }
                 node_return->next = NULL;
 
-
                 n = *node_return; 
                 //Put this into the queue
                 n.blockTime += abs(timeStamp - n.referencePointBlock);
@@ -447,7 +438,6 @@ int main() {
                     n.referencePointRunning = timeStamp;
                 }
 
-                
                 for(int i = q->front;i<q->size;i++) {
                     if(q->nodeArray[i].status == RUNNING) continue;
                     q->nodeArray[i].readyTime += abs(timeStamp - q->nodeArray[i].referencePointReady);
@@ -485,8 +475,19 @@ int main() {
                     q->nodeArray[i].readyTime += abs(timeStamp - q->nodeArray[i].referencePointReady);
                     q->nodeArray[i].referencePointReady = timeStamp;
                 }
-
-                printf("%d %d %d %d\n",n.process_id,n.runningTime,n.readyTime,n.blockTime);
+                struct Node *outNode = calloc(1, sizeof(struct Node));
+                outNode->process_id = n.process_id;
+                outNode->runningTime = n.runningTime;
+                outNode->readyTime = n.readyTime;
+                outNode->blockTime = n.blockTime;
+                outNode->referencePointRunning = n.referencePointRunning;
+                outNode->referencePointReady = n.referencePointReady;
+                outNode->referencePointBlock = n.referencePointBlock; 
+                outNode->status = n.status;
+                outNode->next = n.next;
+                output[outIndex] = outNode;
+                output = realloc(output, sizeof(struct Node *) * (outIndex + 1000));
+                outIndex++;
                 break;
             default:
                 printf("Invalid Command!\n");
@@ -495,12 +496,37 @@ int main() {
         // printQueue(q);
         free_tokens(input_line_tokens, tokenSize);
     }
-    
-    
-    printf("%d %d %d %d\n",no_node.process_id,no_node.runningTime,no_node.readyTime,no_node.blockTime);
-    // for(int i = 0;i<5;i++) {
-    //     printf("%d %d %d %d\n",output[i].process_id,output[i].runningTime,output[i].readyTime,output[i].blockTime);
-    // }
 
+    struct Node *nNode = calloc(1, sizeof(struct Node));
+    nNode->process_id = no_node.process_id;
+    nNode->runningTime = no_node.runningTime;
+    nNode->readyTime = no_node.readyTime;
+    nNode->blockTime = no_node.blockTime;
+    nNode->referencePointRunning = no_node.referencePointRunning;
+    nNode->referencePointReady = no_node.referencePointReady;
+    nNode->referencePointBlock = no_node.referencePointBlock; 
+    nNode->status = no_node.status;
+    nNode->next = no_node.next;
+
+    output[outIndex] = nNode;
+    outIndex++;
+
+
+    qsort(output, outIndex, sizeof(output), cmpFunc);
+
+    for(int i = 0;i<outIndex;i++) {
+        printf("%d %d %d %d\n",output[i]->process_id,output[i]->runningTime,output[i]->readyTime,output[i]->blockTime);
+    }
+
+    free(q);
+    free_list(head_ref1);
+    free_list(head_ref2);
+    free_list(head_ref3);
+    free_list(head_ref4);
+    free_list(head_ref5);
+    for(int i = 0;i<outIndex-1;i++) {
+        free(output[i]);
+    }
+    free(output);
     return 0;
 }
