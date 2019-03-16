@@ -59,11 +59,9 @@ void push_linked_list(struct Node **head_ref, struct Node *node) {
     if((*head_ref) == NULL) {
         node->next = (*head_ref);
         (*head_ref) = node;
-        printf("Node Pushed onto the Linked List Head!\n");
         return;
     }
 
-    printf("Node Pushed onto the Linked List!\n");
     
     while((*head_ref)->next != NULL) {
         (*head_ref) = (*head_ref)->next;
@@ -75,6 +73,7 @@ void push_linked_list(struct Node **head_ref, struct Node *node) {
 
 /* This is to remove a node */
 struct Node * find_node_remove(struct Node **head_ref, int ID) {
+    int length = 0;
 
     struct Node *temp = *head_ref, *prev;
 
@@ -86,15 +85,14 @@ struct Node * find_node_remove(struct Node **head_ref, int ID) {
     while(temp != NULL && temp->process_id != ID) {
         prev = temp;
         temp = temp->next;
+        length++;
     }
 
     if(temp == NULL) {
-        printf("Resource was not found!\n");
         return NULL;
     }
 
     prev->next = temp->next;
-    printf("Resource was found!\n");
     return temp;
 } 
 
@@ -110,7 +108,6 @@ int getLength(struct Node **head_ref) {
 
 void print_list(struct Node **head_ref) {
     if((*head_ref) == NULL) {
-        printf("LIST EMPTY\n");
         return;
     }
 
@@ -153,7 +150,6 @@ void free_list(struct Node *head_ref) {
         struct Node *temp = head_ref;
         head_ref = head_ref->next;
         free(temp);
-        printf("Node Freed!\n");
     }
 }
 
@@ -202,7 +198,6 @@ void pushQueue(struct Queue *queue, struct Node node) {
     queue->rear = (queue->rear + 1) % queue->capacity; 
     queue->nodeArray[queue->rear] = node;
     queue->size = queue->size + 1;
-    printf("Node pushed!\n");
 }   
 
 struct Node popQueue(struct Queue *queue) {
@@ -216,20 +211,20 @@ struct Node popQueue(struct Queue *queue) {
     return node;
 }
 
-void printQueue(struct Queue *queue) {
-    if(queue->nodeArray == NULL || isEmpty(queue)) {
-        return;
-    }
-    printf("*******PRINTING THE CURRENT READY QUEUE*******\n");
-    for(int i = 0;i<queue->size;i++) {
-        printf("node id -> %d\n", queue->nodeArray[i].process_id);
-        printf("node Running Time -> %d\n", queue->nodeArray[i].runningTime);
-        printf("node Ready Time -> %d\n", queue->nodeArray[i].readyTime);
-        printf("node Block Time -> %d\n", queue->nodeArray[i].blockTime);
-        printStatus(queue->nodeArray[i].status);
-    }
-    printf("**********************************************\n");
-}
+// void printQueue(struct Queue *queue) {
+//     if(queue->nodeArray == NULL || isEmpty(queue)) {
+//         return;
+//     }
+//     printf("*******PRINTING THE CURRENT READY QUEUE*******\n");
+//     for(int i = 0;i<queue->size;i++) {
+//         printf("node id -> %d\n", queue->nodeArray[i].process_id);
+//         printf("node Running Time -> %d\n", queue->nodeArray[i].runningTime);
+//         printf("node Ready Time -> %d\n", queue->nodeArray[i].readyTime);
+//         printf("node Block Time -> %d\n", queue->nodeArray[i].blockTime);
+//         printStatus(queue->nodeArray[i].status);
+//     }
+//     printf("**********************************************\n");
+// }
 
 void clearQueue(struct Queue *queue) {
     if(queue == NULL || isEmpty(queue)) {
@@ -256,9 +251,12 @@ int main() {
     //FILE *fp;
     char buffer[1000];
 
-    struct Queue *q = createQueue(1000);
+    struct Queue *q = createQueue(10000);
 
+    struct Node output[5];
     //struct Node no_node = createNode(0);
+
+    struct Node no_node = createNode(0);
 
     while(fgets(buffer, 1000, stdin) != NULL) {
         buffer[strlen(buffer) - 1] = '\0';
@@ -298,47 +296,63 @@ int main() {
                 timeStamp = atoi(input_line_tokens[0]);
                 n = createNode(process_id);
                 if(isEmpty(q)) {
+                    no_node.runningTime += abs(timeStamp - no_node.referencePointRunning);
+                    no_node.referencePointRunning = timeStamp;
+
+
+                    
                     n.status = RUNNING;  
                     n.referencePointRunning = timeStamp;
                 } else {
                     n.status = READY;
                     n.referencePointReady = timeStamp;
-                    q->nodeArray[0].runningTime += abs(timeStamp - q->nodeArray[0].referencePointRunning); //Update the current running nodes time
-                    for(int i = 0;i<q->size;i++) { //Update all of the ready nodes times
-                        if(q->nodeArray[i].status == RUNNING) continue;
-                        q->nodeArray[i].readyTime += abs(timeStamp - q->nodeArray[i].referencePointReady);
-                    }
+                    q->nodeArray[q->front].runningTime += abs(timeStamp - q->nodeArray[q->front].referencePointRunning); //Update the current running nodes time
+                    q->nodeArray[q->front].referencePointRunning = timeStamp;
+                }
+
+                for(int i = q->front;i<q->size;i++) { //Update all of the ready nodes times
+                    if(q->nodeArray[i].status == RUNNING) continue;
+                    q->nodeArray[i].readyTime += abs(timeStamp - q->nodeArray[i].referencePointReady);
+                    q->nodeArray[i].referencePointReady = timeStamp;
                 }
                 pushQueue(q, n);
-                printf("Pushed process %d onto the ready queue\n", process_id);
                 break;
             case 'R':
                 //On Each of these calculate the updated time
                 resource = atoi(input_line_tokens[tokenSize - 2]);
                 process_id = atoi(input_line_tokens[tokenSize - 1]);
-                n = popQueue(q);
-                //Get the previous timestamp
-
                 timeStamp = atoi(input_line_tokens[0]); // The timestamp that we will be adding
 
-                printf("The current referencePoint is %d The current running time is %d\n", n.referencePointRunning, n.runningTime);
-                n.runningTime += abs(timeStamp - n.referencePointRunning);
-
-
-                if(!isEmpty(q)) {
-                    q->nodeArray[0].status = RUNNING;
-                    q->nodeArray[0].referencePointRunning = timeStamp;
-                    q->nodeArray[0].readyTime += abs(timeStamp - q->nodeArray[0].referencePointReady);
-                }
-                
-                //Update all of the ready an running times
-                for(int i = 0;i<q->size;i++) {
-                    if(q->nodeArray[i].status == RUNNING) continue;
-                    q->nodeArray[i].readyTime += abs(timeStamp - q->nodeArray[i].referencePointReady);
-                }
-
+                n = popQueue(q);
+                //Get the previous timestamp
+                n.next = NULL;
                 n.status = BLOCK;
                 n.referencePointBlock = timeStamp;
+
+                if(isEmpty(q)) {
+                    no_node.status = RUNNING;
+                    no_node.referencePointRunning = timeStamp;
+                }
+
+
+                n.runningTime += abs(timeStamp - n.referencePointRunning);
+                // n.referencePointRunning = timeStamp;
+
+                //Update all of the ready an running times
+                if(!isEmpty(q)) {
+                    q->nodeArray[q->front].status = RUNNING;
+                    q->nodeArray[q->front].referencePointRunning = timeStamp;
+                    q->nodeArray[q->front].readyTime += abs(timeStamp - q->nodeArray[q->front].referencePointReady);
+                }      
+
+
+                for(int i = q->front;i<q->size;i++) {
+                    if(q->nodeArray[i].status == RUNNING) continue;
+                    q->nodeArray[i].readyTime += abs(timeStamp - q->nodeArray[i].referencePointReady);
+                    q->nodeArray[i].referencePointReady = timeStamp;
+                }
+          
+
                 struct Node *new_node = calloc(1, sizeof(struct Node));
                 new_node->process_id = n.process_id;
                 new_node->runningTime = n.runningTime;
@@ -351,138 +365,142 @@ int main() {
                 new_node->next = n.next;
 
 
-
                 if(resource == 1) {
-                    printf("Pushing onto linked list 1\n");
                     push_linked_list(&head_ref1, new_node);
                 }
                 if(resource == 2) {
-                    printf("Pushing onto linked list 2\n");
                     push_linked_list(&head_ref2, new_node);
                 }
                 if(resource == 3) {
-                    printf("Pushing onto linked list 3\n");
                     push_linked_list(&head_ref3, new_node);
                 }
                 if(resource == 4) {
-                    printf("Pushing onto linked list 4\n");
                     push_linked_list(&head_ref4, new_node);
                 }
                 if(resource == 5) {
-                    printf("Pushing onto linked list 5\n");
                     push_linked_list(&head_ref5, new_node);
                 }
-                printf("Pushing process %d onto Resource %d\n", process_id,resource);
                 break;
             case 'I':
                 //calculate the updated times
-                printf("Remove a resource and then push back to the queue\n");
                 timeStamp = atoi(input_line_tokens[0]);
                 resource = atoi(input_line_tokens[tokenSize - 2]);
                 process_id = atoi(input_line_tokens[tokenSize - 1]);
                 if(resource == 1) {
-                    printf("Requesting %d from to resource 1\n", process_id);
                     node_return = find_node_remove(&head_ref1, process_id);
                 }
                 if(resource == 2) {
-                    printf("Requesting %d from to resource 2\n", process_id);
                     node_return = find_node_remove(&head_ref2, process_id);
                 }
                 if(resource == 3) {
-                    printf("Requesting %d from to resource 3\n", process_id);
                     node_return = find_node_remove(&head_ref3, process_id);
                 }
                 if(resource == 4) {
-                    printf("Requesting %d from to resource 4\n", process_id);
                     node_return = find_node_remove(&head_ref4, process_id);
                 }
                 if(resource == 5) {
-                    printf("Requesting %d from resource 5\n", process_id);
                     node_return = find_node_remove(&head_ref5, process_id);
                 }
+                node_return->next = NULL;
 
-                if(node_return == NULL) {
-                    printf("NULL VAL\n");
-                }
+
                 n = *node_return; 
                 //Put this into the queue
                 n.blockTime += abs(timeStamp - n.referencePointBlock);
+
                 if(isEmpty(q)) {
                     n.status = RUNNING;  
                     n.referencePointRunning = timeStamp;
+                    no_node.runningTime += abs(timeStamp - no_node.referencePointRunning);
+                    no_node.referencePointRunning = timeStamp;
                 } else  {
                     n.status = READY;
                     n.referencePointReady = timeStamp;   
-                    q->nodeArray[0].runningTime = abs(timeStamp - q->nodeArray[0].referencePointRunning);
-                    for(int i = 0;i<q->size;i++) {
+                    q->nodeArray[q->front].runningTime += abs(timeStamp - q->nodeArray[q->front].referencePointRunning);
+                    q->nodeArray[q->front].referencePointRunning = timeStamp;
+                    for(int i = q->front;i<q->size;i++) {
                         if(q->nodeArray[i].status == RUNNING) continue;
                         q->nodeArray[i].readyTime += abs(timeStamp - q->nodeArray[i].referencePointReady);
+                        q->nodeArray[i].referencePointReady = timeStamp;
                     }
                 }
-                      
                 pushQueue(q, n);
                 break;
             case 'T':
                 //Calculate the updated times
-                printf("Timer interrput\n");
+
+                timeStamp = atoi(input_line_tokens[0]);
                 n = popQueue(q);
-                n.status = READY;
-                n.referencePointReady = timeStamp;
+
                 n.runningTime += abs(timeStamp - n.referencePointRunning);
 
-                 if(!isEmpty(q)) {
-                    //  n.status = RUNNING;
-                    //  n.referencePointRunning = timeStamp;
-                     q->nodeArray[0].status = RUNNING;
-                     q->nodeArray[0].referencePointRunning = timeStamp;
-                 }
+                if(!isEmpty(q)) {
+                    q->nodeArray[q->front].readyTime += abs(timeStamp - q->nodeArray[q->front].referencePointReady);
+                    q->nodeArray[q->front].status = RUNNING;
+                    q->nodeArray[q->front].referencePointRunning = timeStamp;
+                    n.status = READY;
+                    n.referencePointReady = timeStamp;
+                    no_node.status = RUNNING;
+                    no_node.referencePointRunning = timeStamp;
+                } else {
+                    n.status = RUNNING;
+                    n.referencePointRunning = timeStamp;
+                }
 
-                //Update the current ready times
-                for(int i = 0;i<q->size;i++) {
+                
+                for(int i = q->front;i<q->size;i++) {
                     if(q->nodeArray[i].status == RUNNING) continue;
                     q->nodeArray[i].readyTime += abs(timeStamp - q->nodeArray[i].referencePointReady);
+                    q->nodeArray[i].referencePointReady = timeStamp;
                 }
+
                 pushQueue(q,n);
                 //Not worrying about other nodes right now
                 break;
             case 'E':
                 //Calculated the updated times
                 //If not in Q then find it and bring it back to Q and then delete it from the Q
+
                 n = popQueue(q);
+
                 timeStamp = atoi(input_line_tokens[0]);
+                n.next = NULL;
+
                 n.runningTime += abs(timeStamp - n.referencePointRunning);
-                //n.runningTime += abs(timeStamp - n.referencePointRunning);
                 n.status = DEAD;
 
-                if(!isEmpty(q)) { //Set the new Running and timestamp
-                    q->nodeArray[0].status = RUNNING;
-                    q->nodeArray[0].referencePointRunning = timeStamp;
+                if(isEmpty(q)) {
+                    no_node.status = RUNNING;
+                    no_node.referencePointRunning = timeStamp;
                 }
 
-                for(int i = 0;i<q->size;i++) {
-                    printf("called!\n");
+                if(!isEmpty(q)) { //Set the new Running and timestamp
+                    q->nodeArray[q->front].status = RUNNING;
+                    q->nodeArray[q->front].referencePointRunning = timeStamp;
+                    q->nodeArray[q->front].readyTime += abs(timeStamp - q->nodeArray[q->front].referencePointReady);
+                }
+
+                for(int i = q->front;i<q->size;i++) {
                     if(q->nodeArray[i].status == RUNNING) continue;
                     q->nodeArray[i].readyTime += abs(timeStamp - q->nodeArray[i].referencePointReady);
+                    q->nodeArray[i].referencePointReady = timeStamp;
                 }
 
-
-                printf("******************************\n");
-                printf("PRINTING OUT THE FINAL NODE!\n");
-                printf("RUNNING TIME: %d\n", n.runningTime);
-                printf("READY TIME: %d\n", n.readyTime);
-                printf("BLOCK TIME: %d\n", n.blockTime);
-                printStatus(n.status);
-                printf("******************************\n");
+                printf("%d %d %d %d\n",n.process_id,n.runningTime,n.readyTime,n.blockTime);
                 break;
             default:
                 printf("Invalid Command!\n");
                 return 0;
         }        
         // printQueue(q);
-        print_lists();
         free_tokens(input_line_tokens, tokenSize);
-
     }
+    
+    
+    printf("%d %d %d %d\n",no_node.process_id,no_node.runningTime,no_node.readyTime,no_node.blockTime);
+    // for(int i = 0;i<5;i++) {
+    //     printf("%d %d %d %d\n",output[i].process_id,output[i].runningTime,output[i].readyTime,output[i].blockTime);
+    // }
 
     return 0;
 }
