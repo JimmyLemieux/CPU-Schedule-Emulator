@@ -515,7 +515,8 @@ int main() {
     qsort(output, outIndex, sizeof(output), cmpFunc);
 
     for(int i = 0;i<outIndex;i++) {
-        printf("%d %d %d %d\n",output[i]->process_id,output[i]->runningTime,output[i]->readyTime,output[i]->blockTime);
+        if(output[i]->process_id == 0) printf("%d %d\n", output[i]->process_id, output[i]->runningTime);
+        else printf("%d %d %d %d\n",output[i]->process_id,output[i]->runningTime,output[i]->readyTime,output[i]->blockTime);
     }
 
     free(q);
