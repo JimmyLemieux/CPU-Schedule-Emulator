@@ -356,7 +356,6 @@ int main() {
                 new_node->status = n.status;
                 new_node->next = n.next;
 
-
                 if(resource == 1) {
                     push_linked_list(&head_ref1, new_node);
                 }
@@ -395,7 +394,11 @@ int main() {
                 }
                 node_return->next = NULL;
 
+
+
                 n = *node_return; 
+
+                free(node_return);
                 //Put this into the queue
                 n.blockTime += abs(timeStamp - n.referencePointBlock);
 
