@@ -495,7 +495,6 @@ int main() {
                 return 0;
         }        
         // printQueue(q);
-        free_tokens(input_line_tokens, tokenSize);
     }
 
     struct Node *nNode = calloc(1, sizeof(struct Node));
