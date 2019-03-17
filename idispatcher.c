@@ -253,13 +253,12 @@ int main() {
     while(fgets(buffer, 1000, stdin) != NULL) {
         buffer[strlen(buffer) - 1] = '\0';
         char *token;
-        char **input_line_tokens = (char **)calloc(1, sizeof(char *));
+        char **input_line_tokens = (char **)calloc(5, sizeof(char *));
         int tokenSize = 0; 
         token = strtok(buffer, " ");
         while(token != NULL) {
             input_line_tokens[tokenSize] = calloc(1, sizeof(char) * strlen(token) + 10);
             strcpy(input_line_tokens[tokenSize], token);
-            input_line_tokens = realloc(input_line_tokens, sizeof(char *) + (tokenSize+10000));
             tokenSize++;
             token = strtok(NULL, " ");
         }
