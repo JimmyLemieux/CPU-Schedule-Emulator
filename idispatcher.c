@@ -1,3 +1,4 @@
+//James Lemieux 1014181 jlemie jlemie03@uoguelph.ca
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
