@@ -259,7 +259,7 @@ int main() {
         while(token != NULL) {
             input_line_tokens[tokenSize] = calloc(1, sizeof(char) * strlen(token) + 10);
             strcpy(input_line_tokens[tokenSize], token);
-            input_line_tokens = realloc(input_line_tokens, sizeof(char *) + (tokenSize + 10));
+            input_line_tokens = realloc(input_line_tokens, sizeof(char *) + (tokenSize+10000));
             tokenSize++;
             token = strtok(NULL, " ");
         }
