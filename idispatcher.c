@@ -525,7 +525,7 @@ int main() {
     free_list(head_ref3);
     free_list(head_ref4);
     free_list(head_ref5);
-    for(int i = 0;i<outIndex-1;i++) {
+    for(int i = 0;i<outIndex;i++) {
         free(output[i]);
     }
     free(output);
