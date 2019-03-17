@@ -491,7 +491,6 @@ int main() {
                 outIndex++;
                 break;
             default:
-                printf("Invalid Command!\n");
                 return 0;
         }        
         // printQueue(q);
@@ -515,6 +514,7 @@ int main() {
     qsort(output, outIndex, sizeof(output), cmpFunc);
 
     for(int i = 0;i<outIndex;i++) {
+        if(output[i]->process_id == -1)continue;
         if(output[i]->process_id == 0) printf("%d %d\n", output[i]->process_id, output[i]->runningTime);
         else printf("%d %d %d %d\n",output[i]->process_id,output[i]->runningTime,output[i]->readyTime,output[i]->blockTime);
     }
