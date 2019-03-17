@@ -519,7 +519,6 @@ int main() {
         else printf("%d %d %d %d\n",output[i]->process_id,output[i]->runningTime,output[i]->readyTime,output[i]->blockTime);
     }
 
-    free(q);
     free_list(head_ref1);
     free_list(head_ref2);
     free_list(head_ref3);
@@ -529,5 +528,9 @@ int main() {
         free(output[i]);
     }
     free(output);
+
+    free(q->nodeArray);
+    free(q);
+
     return 0;
 }
